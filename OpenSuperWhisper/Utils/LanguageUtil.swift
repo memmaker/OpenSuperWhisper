@@ -6,10 +6,10 @@ class LanguageUtil {
         "he", "sv", "it", "id", "hi", "fi", "uk",
     ]
 
-    static let parakeetV2Languages = ["auto", "en"]
+    static let parakeetV2Languages = ["en"]
 
     static let parakeetV3Languages = [
-        "auto", "en", "de", "es", "ru", "fr", "pt", "pl", "nl", "sv", "it", "fi",
+        "en", "de", "es", "ru", "fr", "pt", "pl", "nl", "sv", "it", "fi",
         "bg", "hr", "cs", "da", "el", "et", "hu", "lv", "lt", "mt", "ro", "sk", "sl", "uk",
     ]
 
