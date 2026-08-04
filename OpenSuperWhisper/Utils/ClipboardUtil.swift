@@ -52,6 +52,106 @@ class ClipboardUtil {
         }
     }
 
+    /// Decodes the common C/printf-style escapes users can type in settings.
+    static func decodePrintfEscapes(_ value: String) -> String {
+        var result = ""
+        let characters = Array(value)
+        var index = 0
+
+        while index < characters.count {
+            let character = characters[index]
+            index += 1
+            guard character == "\\" else {
+                result.append(character)
+                continue
+            }
+
+            guard index < characters.count else {
+                result.append("\\")
+                break
+            }
+            let escaped = characters[index]
+            index += 1
+
+            switch escaped {
+            case "n": result.append("\n")
+            case "t": result.append("\t")
+            case "r": result.append("\r")
+            case "b": result.append("\u{8}")
+            case "f": result.append("\u{c}")
+            case "v": result.append("\u{b}")
+            case "a": result.append("\u{7}")
+            case "\\": result.append("\\")
+            case "\"": result.append("\"")
+            case "'": result.append("'")
+            case "x":
+                let start = index
+                var value = 0
+                while index < characters.count, index - start < 2,
+                      let digit = characters[index].hexDigitValue {
+                    value = value * 16 + digit
+                    index += 1
+                }
+                if index == start {
+                    result.append("\\x")
+                } else if let scalar = UnicodeScalar(value) {
+                    result.unicodeScalars.append(scalar)
+                }
+            case "0"..."7":
+                let start = index - 1
+                var value = escaped.wholeNumberValue ?? 0
+                while index < characters.count, index - start < 3,
+                      let digit = characters[index].wholeNumberValue, digit < 8 {
+                    value = value * 8 + digit
+                    index += 1
+                }
+                if let scalar = UnicodeScalar(value) {
+                    result.unicodeScalars.append(scalar)
+                }
+            default:
+                result.append("\\")
+                result.append(escaped)
+            }
+        }
+
+        return result
+    }
+
+    /// Sends text as keyboard input after the transcription paste. Newline and
+    /// tab are real key presses so they can submit forms or move focus.
+    static func sendKeys(_ keys: String) {
+        guard !keys.isEmpty,
+              let source = CGEventSource(stateID: .combinedSessionState) else { return }
+
+        for key in keys {
+            switch key {
+            case "\n", "\r":
+                sendKeyPress(keyCode: 36, source: source) // Return
+            case "\t":
+                sendKeyPress(keyCode: 48, source: source) // Tab
+            default:
+                let utf16 = Array(String(key).utf16)
+                guard !utf16.isEmpty,
+                      let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true),
+                      let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) else { continue }
+                utf16.withUnsafeBufferPointer { buffer in
+                    guard let baseAddress = buffer.baseAddress else { return }
+                    CGEventKeyboardSetUnicodeString(keyDown, UInt32(buffer.count), baseAddress)
+                    CGEventKeyboardSetUnicodeString(keyUp, UInt32(buffer.count), baseAddress)
+                }
+                keyDown.post(tap: .cghidEventTap)
+                keyUp.post(tap: .cghidEventTap)
+            }
+        }
+    }
+
+    private static func sendKeyPress(keyCode: CGKeyCode, source: CGEventSource) {
+        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),
+              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) else { return }
+        keyDown.post(tap: .cghidEventTap)
+        keyUp.post(tap: .cghidEventTap)
+    }
+
     @discardableResult
     static func restoreIfUnchanged(_ contents: PasteboardContents,
                                    expectedChangeCount: Int,
