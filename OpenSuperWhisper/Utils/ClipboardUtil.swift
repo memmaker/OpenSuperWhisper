@@ -136,8 +136,8 @@ class ClipboardUtil {
                       let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) else { continue }
                 utf16.withUnsafeBufferPointer { buffer in
                     guard let baseAddress = buffer.baseAddress else { return }
-                    CGEventKeyboardSetUnicodeString(keyDown, UInt32(buffer.count), baseAddress)
-                    CGEventKeyboardSetUnicodeString(keyUp, UInt32(buffer.count), baseAddress)
+                    keyDown.keyboardSetUnicodeString(stringLength: buffer.count, unicodeString: baseAddress)
+                    keyUp.keyboardSetUnicodeString(stringLength: buffer.count, unicodeString: baseAddress)
                 }
                 keyDown.post(tap: .cghidEventTap)
                 keyUp.post(tap: .cghidEventTap)
