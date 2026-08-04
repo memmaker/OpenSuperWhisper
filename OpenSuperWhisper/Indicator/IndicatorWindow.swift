@@ -229,9 +229,10 @@ class IndicatorViewModel: ObservableObject {
                 ClipboardUtil.insertText(finalText)
             }
             if !keysAfterTranscription.isEmpty {
-                // Some target apps process Cmd+V asynchronously. Let the paste
-                // settle before sending a follow-up Return/Tab or text key.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                // Let the target app finish processing Cmd+V and let the
+                // nonactivating indicator panel finish hiding before sending
+                // a follow-up Return/Tab or text key.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     ClipboardUtil.sendKeys(keysAfterTranscription)
                 }
             }
