@@ -76,7 +76,11 @@ class FluidAudioEngine: TranscriptionEngine {
         // Perform actual transcription - FluidAudio will emit progress automatically
         // FluidAudio 0.15.x requires an explicit decoder state per transcription.
         var decoderState = try TdtDecoderState(decoderLayers: await asrManager.decoderLayerCount)
-        let result = try await asrManager.transcribe(url, decoderState: &decoderState)
+        // "auto" (and any code without a matching script filter) maps to nil,
+        // the native auto-detect path. A known language enables side-effect-free
+        // script-aware token filtering for the v3 joint decoder.
+        let language = Self.languageHint(for: settings.selectedLanguage)
+        let result = try await asrManager.transcribe(url, decoderState: &decoderState, language: language)
         
         guard !isCancelled else {
             throw CancellationError()
@@ -109,6 +113,13 @@ class FluidAudioEngine: TranscriptionEngine {
             engine: "fluidaudio",
             fluidAudioModelVersion: AppPreferences.shared.fluidAudioModelVersion
         )
+    }
+
+    /// Maps the user's language selection to a FluidAudio script-filtering hint.
+    /// "auto" (and any language without a matching script filter) maps to nil,
+    /// i.e. FluidAudio's native auto-detect path.
+    static func languageHint(for code: String) -> Language? {
+        code == "auto" ? nil : Language(rawValue: code)
     }
 }
 
