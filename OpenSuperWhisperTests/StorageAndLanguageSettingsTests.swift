@@ -74,21 +74,22 @@ final class LanguageSupportTests: XCTestCase {
         XCTAssertTrue(languages.contains("zh"))
     }
 
-    func testSupportedLanguages_parakeetV2_isEnglishOnly() {
+    func testSupportedLanguages_parakeetV2_includesAutoAndEnglish() {
         let languages = LanguageUtil.supportedLanguages(engine: "fluidaudio", fluidAudioModelVersion: "v2")
-        XCTAssertEqual(languages, ["en"])
+        XCTAssertEqual(languages, ["auto", "en"])
     }
 
     func testSupportedLanguages_parakeetV3_excludesUnsupportedLanguages() {
         let languages = LanguageUtil.supportedLanguages(engine: "fluidaudio", fluidAudioModelVersion: "v3")
 
-        for unsupported in ["auto", "zh", "ja", "ko", "ar", "tr", "he", "hi", "id", "ca"] {
+        for unsupported in ["zh", "ja", "ko", "ar", "tr", "he", "hi", "id", "ca"] {
             XCTAssertFalse(languages.contains(unsupported), "\(unsupported) must not be offered for Parakeet v3")
         }
+        XCTAssertTrue(languages.contains("auto"))
         for supported in ["en", "de", "ru", "uk", "pl", "mt"] {
             XCTAssertTrue(languages.contains(supported), "\(supported) must be offered for Parakeet v3")
         }
-        XCTAssertEqual(languages.count, 25)
+        XCTAssertEqual(languages.count, 26)
     }
 
     func testAllParakeetV3LanguagesHaveDisplayNames() {
