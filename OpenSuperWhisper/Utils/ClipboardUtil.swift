@@ -121,7 +121,7 @@ class ClipboardUtil {
     /// tab are real key presses so they can submit forms or move focus.
     static func sendKeys(_ keys: String) {
         guard !keys.isEmpty,
-              let source = CGEventSource(stateID: .hidSystemState) else { return }
+              let source = CGEventSource(stateID: .combinedSessionState) else { return }
 
         for key in keys {
             switch key {
@@ -134,17 +134,13 @@ class ClipboardUtil {
                 guard !utf16.isEmpty,
                       let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true),
                       let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) else { continue }
-                // Do not leak a modifier held by the recording shortcut into
-                // the configured follow-up text.
-                keyDown.flags = []
-                keyUp.flags = []
                 utf16.withUnsafeBufferPointer { buffer in
                     guard let baseAddress = buffer.baseAddress else { return }
                     keyDown.keyboardSetUnicodeString(stringLength: buffer.count, unicodeString: baseAddress)
                     keyUp.keyboardSetUnicodeString(stringLength: buffer.count, unicodeString: baseAddress)
                 }
-                keyDown.post(tap: .cgSessionEventTap)
-                keyUp.post(tap: .cgSessionEventTap)
+                keyDown.post(tap: .cghidEventTap)
+                keyUp.post(tap: .cghidEventTap)
             }
         }
     }
@@ -152,12 +148,8 @@ class ClipboardUtil {
     private static func sendKeyPress(keyCode: CGKeyCode, source: CGEventSource) {
         guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),
               let keyUp = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) else { return }
-        // Explicitly clear flags so Return remains Return even when the
-        // recording shortcut used a modifier key.
-        keyDown.flags = []
-        keyUp.flags = []
-        keyDown.post(tap: .cgSessionEventTap)
-        keyUp.post(tap: .cgSessionEventTap)
+        keyDown.post(tap: .cghidEventTap)
+        keyUp.post(tap: .cghidEventTap)
     }
 
     @discardableResult
