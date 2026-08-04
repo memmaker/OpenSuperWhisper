@@ -218,6 +218,7 @@ class IndicatorViewModel: ObservableObject {
         guard !text.isEmpty else { return }
         let finalText = Self.applyPostProcessing(text)
         let prefs = AppPreferences.shared
+        let keysAfterTranscription = ClipboardUtil.decodePrintfEscapes(prefs.addKeysAfterTranscription)
 
         if prefs.autoPasteTranscription {
             if prefs.autoCopyToClipboard {
@@ -226,6 +227,15 @@ class IndicatorViewModel: ObservableObject {
             } else {
                 // Paste but restore original clipboard (legacy behavior)
                 ClipboardUtil.insertText(finalText)
+            }
+            if !keysAfterTranscription.isEmpty {
+                // Some target apps process Cmd+V asynchronously, and the
+                // nonactivating indicator panel's hide spring is still settling
+                // here. Wait for both before sending the follow-up keys so the
+                // foreground app, not the panel, receives them.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    ClipboardUtil.sendKeys(keysAfterTranscription)
+                }
             }
         } else if prefs.autoCopyToClipboard {
             // Only copy to clipboard, don't paste

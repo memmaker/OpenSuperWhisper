@@ -1358,6 +1358,34 @@ final class AddSpaceAfterSentenceTests: XCTestCase {
     }
 }
 
+final class AddKeysAfterTranscriptionTests: XCTestCase {
+    func testDecodePrintfEscapes() {
+        XCTAssertEqual(
+            ClipboardUtil.decodePrintfEscapes(#"submit\nnext\tline\\"#),
+            "submit\nnext\tline\\"
+        )
+    }
+
+    func testDecodePrintfEscapes_supportsHexAndOctal() {
+        XCTAssertEqual(ClipboardUtil.decodePrintfEscapes(#"\x41\101"#), "AA")
+    }
+
+    func testDecodePrintfEscapes_preservesUnknownAndTrailingEscapes() {
+        XCTAssertEqual(ClipboardUtil.decodePrintfEscapes(#"value\q\"#), #"value\q\"#)
+    }
+
+    func testDecodePrintfEscapes_emptyAndPlain() {
+        XCTAssertEqual(ClipboardUtil.decodePrintfEscapes(""), "")
+        XCTAssertEqual(ClipboardUtil.decodePrintfEscapes("plain"), "plain")
+    }
+
+    func testPrefDefaultsToEmptyString() {
+        UserDefaults.standard.removeObject(forKey: "addKeysAfterTranscription")
+        XCTAssertEqual(AppPreferences.shared.addKeysAfterTranscription, "")
+        UserDefaults.standard.removeObject(forKey: "addKeysAfterTranscription")
+    }
+}
+
 final class FocusUtilsCaretPositionTests: XCTestCase {
 
     // Primary screen 1440x900 with a larger secondary display to the right,
