@@ -218,7 +218,6 @@ class IndicatorViewModel: ObservableObject {
         guard !text.isEmpty else { return }
         let finalText = Self.applyPostProcessing(text)
         let prefs = AppPreferences.shared
-        let keysAfterTranscription = ClipboardUtil.decodePrintfEscapes(prefs.addKeysAfterTranscription)
 
         if prefs.autoPasteTranscription {
             if prefs.autoCopyToClipboard {
@@ -227,13 +226,6 @@ class IndicatorViewModel: ObservableObject {
             } else {
                 // Paste but restore original clipboard (legacy behavior)
                 ClipboardUtil.insertText(finalText)
-            }
-            if !keysAfterTranscription.isEmpty {
-                // Some target apps process Cmd+V asynchronously. Let the paste
-                // settle before sending a follow-up Return/Tab or text key.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    ClipboardUtil.sendKeys(keysAfterTranscription)
-                }
             }
         } else if prefs.autoCopyToClipboard {
             // Only copy to clipboard, don't paste

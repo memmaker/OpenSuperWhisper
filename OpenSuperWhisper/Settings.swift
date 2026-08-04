@@ -190,12 +190,6 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
-    @Published var addKeysAfterTranscription: String {
-        didSet {
-            AppPreferences.shared.addKeysAfterTranscription = addKeysAfterTranscription
-        }
-    }
-
     @Published var autoCopyToClipboard: Bool {
         didSet {
             AppPreferences.shared.autoCopyToClipboard = autoCopyToClipboard
@@ -230,7 +224,6 @@ class SettingsViewModel: ObservableObject {
         self.escCancelWithoutConfirmation = prefs.escCancelWithoutConfirmation
         self.startHiddenInMenuBar = prefs.startHiddenInMenuBar
         self.addSpaceAfterSentence = prefs.addSpaceAfterSentence
-        self.addKeysAfterTranscription = prefs.addKeysAfterTranscription
         self.autoCopyToClipboard = prefs.autoCopyToClipboard
         self.autoPasteTranscription = prefs.autoPasteTranscription
 
@@ -519,7 +512,6 @@ class SettingsViewModel: ObservableObject {
         }
     }
 }
-
 
 struct SettingsDownloadableModel: Identifiable {
     let id = UUID()
@@ -952,16 +944,6 @@ struct SettingsView: View {
                             Toggle("", isOn: $viewModel.addSpaceAfterSentence)
                                 .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
                                 .labelsHidden()
-                        }
-
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Add Keys After Transcription")
-                                .font(.subheadline)
-                            TextField("", text: $viewModel.addKeysAfterTranscription)
-                                .textFieldStyle(.roundedBorder)
-                            Text("Supports escapes such as \\n for Return and \\t for Tab")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
                         }
                     }
                 }
@@ -1881,3 +1863,4 @@ struct ModelDownloadItemView: View {
         }
     }
 }
+
